@@ -2,13 +2,7 @@
 <!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:FasterParser</id>
-<<<<<<< HEAD
-<version>3.0</version>
-
-<file name="$sourcedir/Subs.php">
-	<operation>
-=======
-<version>1.1</version>
+<version>2.1</version>
 
 <file name="$sourcedir/Subs.php">
 	<operation>
@@ -16,38 +10,61 @@
 }]]></search>
 		<add><![CDATA[
 
-// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
-function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
+ /**
+ * Lexicographic permutation function.
+ *
+ * This is a special type of permutation which involves the order of the set. The next
+ * lexicographic permutation of '32541' is '34125'. Numerically, it is simply the smallest
+ * set larger than the current one.
+ *
+ * The benefit of this over a recursive solution is that the whole list does NOT need
+ * to be held in memory. So it's actually possible to run 30! permutations without
+ * causing a memory overflow.
+ *
+ * Source: O'Reilly PHP Cookbook
+ *
+ * @param mixed[] $p An array of permutations
+ * @param int $size The size of our array
+ *
+ * @return mixed[] The next permutation of the passed array $p
+ */
+function pc_next_permutation($p, $size)
 {
-	$test = substr($message, 0, $tpos = strpos($message, ']'));
-	while (substr_count($test, '"') % 2 !== 0)
+	// Slide down the array looking for where we're smaller than the next guy
+	for ($i = $size - 1; isset($p[$i]) && $p[$i] >= $p[$i + 1]; --$i)
 	{
-		$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
-		if ($pos1 === false)
-			break;
-		$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
 	}
-	$params = explode(' ', $test);
-	unset($params[0]);
-	$order = array();
-	$replace_str = $old = '';
-	foreach ($params as $param)
+
+	// If this doesn't occur, we've finished our permutations
+	// the array is reversed: (1, 2, 3, 4) => (4, 3, 2, 1)
+	if ($i === -1)
 	{
-		if (strpos($param, '=') === false)
-			$order[$old] .= ' ' . $param;
-		else
-			$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
+		return false;
 	}
-	foreach ($parameters as $key => $ignore)
+
+	// Slide down the array looking for a bigger number than what we found before
+	for ($j = $size; $p[$j] <= $p[$i]; --$j)
 	{
-		$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
-		unset($order[$key]);
 	}
-	return count($order) == 0;
-}]]></add>
+
+	// Swap them
+	$tmp = $p[$i];
+	$p[$i] = $p[$j];
+	$p[$j] = $tmp;
+
+	// Now reverse the elements in between by swapping the ends
+	for ($i, $j = $size; $i < $j; $i, --$j)
+	{
+		$tmp = $p[$i];
+		$p[$i] = $p[$j];
+		$p[$j] = $tmp;
+	}
+
+	return $p;
+}
+]]></add>
 	</operation>
 	<operation>
->>>>>>> parent of acde18d... v2.0 - September 7th, 2015
 		<search position="replace"><![CDATA[$preg = array();
 				foreach ($possible['parameters'] as $p => $info)
 					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
@@ -65,45 +82,35 @@ function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
 				// Didn't match our parameter list, try the next possible.
 				if (!$match)
 					continue;]]></search>
-		<add><![CDATA[// Reorganize the parameter list, then compare the result.  Continue if found:
-				if (!fix_param_order(($test = substr($message, $pos1 - 1)), $possible['parameters'], $replace_str, $tpos))
-					continue;
-				$preg = '';
+		<add><![CDATA[$preg = array();
 				foreach ($possible['parameters'] as $p => $info)
-<<<<<<< HEAD
-					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . '\s*)' . (empty($info['optional']) ? '' : '?');
+					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
 
-				// Extract the string that potentially holds our parameters.
-				$blob = preg_split('~\[/?(?:' . $alltags_regex . ')~i', substr($message, $pos));
-				$blobs = preg_split('~\]~i', $blob[1]);
+				// Okay, this may look ugly and it is, but it's not going to happen much and it is the best way of allowing any order of parameters but still parsing them right.
+				$param_size = count($preg) - 1;
+				$preg_keys = range(0, $param_size);
+				$message_stub = substr($message, $pos1 - 1);
 
-				$splitters = implode('=|', array_keys($possible['parameters'])) . '=';
+				// If sometthhing adds many parameters we can exceed max_execution time; let's prevent that.
+				// 5040 = 7, 40,320 = 8, (N!) etc
+				$max_iterations = 5040;
 
-				// Progressively append more blobs until we find our parameters or run out of blobs
-				$blob_counter = 1;
-				while ($blob_counter <= count($blobs))
+				// Step, one by one, through all possible permutations of the parameters until we have a match.
+				do
 				{
+					$match_preg = '~^';
+					foreach ($preg_keys as $key)
+						$match_preg .= $preg[$key];
+					$match_preg .= '\]~i';
 
-					$given_param_string = implode(']', array_slice($blobs, 0, $blob_counter++));
-
-					$given_params = preg_split('~\s(?=(' . $splitters . '))~i', $given_param_string);
-					sort($given_params, SORT_STRING);
-
-					$match = preg_match('~^' . implode('', $preg) . '$~i', implode(' ', $given_params), $matches) !== 0;
-
-					if ($match)
-						$blob_counter = count($blobs) + 1;
+					// Check if this combination of parameters matches the user input.
+					$match = preg_match($match_preg, $message_stub, $matches) !== 0;
 				}
+				while (!$match && --$max_iterations && ($preg_keys = pc_next_permutation($preg_keys, $param_size)));
 
 				// Didn't match our parameter list, try the next possible.
 				if (!$match)
 					continue;]]></add>
-=======
-					$preg .= '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
-				if (!preg_match('~^' . $preg . '\]~i', ($replace_str .= substr($test, $tpos)), $matches))
-					continue;
-				$message = substr($message, 0, $pos1 - 1) . $replace_str;]]></add>
->>>>>>> parent of acde18d... v2.0 - September 7th, 2015
 	</operation>
 </file>
 </modification>

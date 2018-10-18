@@ -1,30 +1,32 @@
-[hr]
-[center][color=red][size=16pt][b]FASTER SMF PARSER v2.1[/b][/size][/color]
-[url=http://www.simplemachines.org/community/index.php?action=profile;u=253913][b]By Dougiefresh[/b][/url] -> [url=http://custom.simplemachines.org/mods/index.php?mod=4069]Link to Mod[/url]
-[/center]
-[hr]
+--------
 
-[color=blue][b][size=12pt][u]Introduction[/u][/size][/b][/color]
-The SMF parser in the SMF 2.0.x line, as well as the SMF 2.1 Beta 1 & 2, have a potentially "fatal flaw", at least where it concerns bbcodes with a large number of parameters.  The original SMF code generates permutations of all possible combinations of the parameters in order to make it easier for the user to use bbcodes, and then checks to see which permutation is the right one.  A bbcode with 14 parameters generates 98,306 permutations, taking little more than half a second on my system [b]PER USE[/b] and using [b]90MB[/b] of memory!!  Checking for 15 parameters crashes my forum with an out-of-memory error because it attempts to allocate more than 128MB of memory!
+## **FASTER SMF PARSER v2.1**
+[**By Dougiefresh**](http://www.simplemachines.org/community/index.php?action=profile;u=253913) -> [Link to Mod](http://custom.simplemachines.org/mods/index.php?mod=4069)
+
+--------
+
+## Introduction
+The SMF parser in the SMF 2.0.x line, as well as the SMF 2.1 Beta 1 & 2, have a potentially "fatal flaw", at least where it concerns bbcodes with a large number of parameters.  The original SMF code generates permutations of all possible combinations of the parameters in order to make it easier for the user to use bbcodes, and then checks to see which permutation is the right one.  A bbcode with 14 parameters generates 98,306 permutations, taking little more than half a second on my system **PER USE** and using **90MB** of memory!!  Checking for 15 parameters crashes my forum with an out-of-memory error because it attempts to allocate more than 128MB of memory!
 
 SMF 2.1 Beta 2 Nightly (as of September 4th, 2015) takes a different approach to the "fatal flaw", avoiding the use of a permutation array prior to processing the parameter permutations.  This avoids the possible of a forum crash, plus potentially allows for more parameters to be processed without having to rearrange parameters.
 
-Please note that both this mod and SMF 2.1 Beta 2 nightly leaves the [b]permute[/b] function in place, as other mods or future forum versions may need the built-in functionality.
+Please note that both this mod and SMF 2.1 Beta 2 nightly leaves the **permute** function in place, as other mods or future forum versions may need the built-in functionality.
 
-[color=blue][b][size=12pt][u]Related Discussion[/u][/size][/b][/color]
-o [url=http://www.simplemachines.org/community/index.php?topic=538611.msg3827580#msg3827580]REPORT: Potentially "Fatal Flaw" in SMF's bbcode parser[/url]
+## Related Discussion
 
-[color=blue][b][size=12pt][u]Admin Settings[/u][/size][/b][/color]
+- [REPORT: Potentially "Fatal Flaw" in SMF's bbcode parser](http://www.simplemachines.org/community/index.php?topic=538611.msg3827580#msg3827580)
+
+## Admin Settings
 There are no admin settings to this mod.  To disable, you must uninstall this mod.
 
-[color=blue][b][size=12pt][u]Compatibility Notes[/u][/size][/b][/color]
+## Compatibility Notes
 This mod was tested on SMF 2.0.10, but should work on SMF 2.0 and up.  SMF 1.x is not and will not be supported.
 
-[color=blue][b][size=12pt][u]Changelog[/u][/size][/b][/color]
-The changelog can be viewed at [url=http://www.xptsp.com/board/free-modifications/faster-smf-bbcode-parser/?tab=1]XPtsp.com[/url].
+## Changelog
+The changelog can be viewed at [XPtsp.com](http://www.xptsp.com/board/free-modifications/faster-smf-bbcode-parser/?tab=1).
 
-[color=blue][b][size=12pt][u]License[/u][/size][/b][/color]
-Copy of SMF 2.1 Beta 2's License as copied from the [b]LICENSE[/b] file in that install:
+## License
+Copy of SMF 2.1 Beta 2's License as copied from the **LICENSE** file in that install:
 
 Copyright © 2011 Simple Machines. All rights reserved.
 
