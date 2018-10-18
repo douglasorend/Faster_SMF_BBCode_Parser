@@ -1,3 +1,6 @@
+v3.0 - August 28th, 2017
+o Updated mod to use code from SMF 2.1 Beta 3.
+
 v2.0 - September 7th, 2015
 o Replaced custom code with SMF 2.1 Beta 2 Nightly's code (Sept 4th, 2015)
 
