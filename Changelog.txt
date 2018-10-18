@@ -1,0 +1,8 @@
+v2.0 - September 7th, 2015
+o Replaced custom code with SMF 2.1 Beta 2 Nightly's code (Sept 4th, 2015)
+
+v1.1 - August 19th, 2015
+o Modifications made to parse quoted stuff better.
+
+v1.0 - July 31st, 2015
+o Initial Release to the Public
