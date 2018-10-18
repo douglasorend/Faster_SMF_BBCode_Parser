@@ -2,10 +2,52 @@
 <!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:FasterParser</id>
+<<<<<<< HEAD
 <version>3.0</version>
 
 <file name="$sourcedir/Subs.php">
 	<operation>
+=======
+<version>1.1</version>
+
+<file name="$sourcedir/Subs.php">
+	<operation>
+		<search position="before"><![CDATA[return $orders;
+}]]></search>
+		<add><![CDATA[
+
+// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
+function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
+{
+	$test = substr($message, 0, $tpos = strpos($message, ']'));
+	while (substr_count($test, '"') % 2 !== 0)
+	{
+		$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
+		if ($pos1 === false)
+			break;
+		$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
+	}
+	$params = explode(' ', $test);
+	unset($params[0]);
+	$order = array();
+	$replace_str = $old = '';
+	foreach ($params as $param)
+	{
+		if (strpos($param, '=') === false)
+			$order[$old] .= ' ' . $param;
+		else
+			$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
+	}
+	foreach ($parameters as $key => $ignore)
+	{
+		$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
+		unset($order[$key]);
+	}
+	return count($order) == 0;
+}]]></add>
+	</operation>
+	<operation>
+>>>>>>> parent of acde18d... v2.0 - September 7th, 2015
 		<search position="replace"><![CDATA[$preg = array();
 				foreach ($possible['parameters'] as $p => $info)
 					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
@@ -23,8 +65,12 @@
 				// Didn't match our parameter list, try the next possible.
 				if (!$match)
 					continue;]]></search>
-		<add><![CDATA[$preg = array();
+		<add><![CDATA[// Reorganize the parameter list, then compare the result.  Continue if found:
+				if (!fix_param_order(($test = substr($message, $pos1 - 1)), $possible['parameters'], $replace_str, $tpos))
+					continue;
+				$preg = '';
 				foreach ($possible['parameters'] as $p => $info)
+<<<<<<< HEAD
 					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . '\s*)' . (empty($info['optional']) ? '' : '?');
 
 				// Extract the string that potentially holds our parameters.
@@ -52,6 +98,12 @@
 				// Didn't match our parameter list, try the next possible.
 				if (!$match)
 					continue;]]></add>
+=======
+					$preg .= '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
+				if (!preg_match('~^' . $preg . '\]~i', ($replace_str .= substr($test, $tpos)), $matches))
+					continue;
+				$message = substr($message, 0, $pos1 - 1) . $replace_str;]]></add>
+>>>>>>> parent of acde18d... v2.0 - September 7th, 2015
 	</operation>
 </file>
 </modification>
