@@ -1,6 +1,6 @@
 [hr]
-[center][color=red][size=16pt][b]FASTER SMF PARSER v1.0[/b][/size][/color]
-[url=http://www.simplemachines.org/community/index.php?action=profile;u=253913][b]By Dougiefresh[/b][/url] -> [url=http://custom.simplemachines.org/mods/index.php?mod=4056]Link to Mod[/url]
+[center][color=red][size=16pt][b]FASTER SMF PARSER v1.1[/b][/size][/color]
+[url=http://www.simplemachines.org/community/index.php?action=profile;u=253913][b]By Dougiefresh[/b][/url] -> [url=http://custom.simplemachines.org/mods/index.php?mod=4069]Link to Mod[/url]
 [/center]
 [hr]
 
