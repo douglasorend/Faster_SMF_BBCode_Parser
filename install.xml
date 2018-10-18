@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
+<modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
+<id>Dougiefresh:FasterParser</id>
+<version>1.0</version>
+
+<file name="$sourcedir/Subs.php">
+	<operation>
+		<search position="before"><![CDATA[return $orders;
+}]]></search>
+		<add><![CDATA[
+
+// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
+function fix_param_order($message, &$parameters, &$out)
+{
+	$test = substr($message, 0, $pos = strpos($message, ']'));
+	while (substr_count($test, '"') % 2 !== 0)
+	{
+		$pos += ($pos1 = strpos(substr($message, $pos), '"'));
+		if ($pos1 === false)
+			break;
+		$test = substr($message, 0, ($pos += strpos(substr($message, $pos), ']')));
+	}
+	$params = explode(' ', $test);
+	unset($params[0]);
+	$order = array();
+	$out = $old = '';
+	foreach ($params as $param)
+	{
+		if (strpos($param, '=') === false)
+			$order[$old] .= ' ' . $param;
+		else
+			$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
+	}
+	foreach ($parameters as $key => $ignore)
+	{
+		$out .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
+		unset($order[$key]);
+	}
+	return count($order) == 0;
+}]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[$preg = array();
+				foreach ($possible['parameters'] as $p => $info)
+					$preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
+
+				// Okay, this may look ugly and it is, but it's not going to happen much and it is the best way of allowing any order of parameters but still parsing them right.
+				$match = false;
+				$orders = permute($preg);
+				foreach ($orders as $p)
+					if (preg_match('~^' . implode('', $p) . '\]~i', substr($message, $pos1 - 1), $matches) != 0)
+					{
+						$match = true;
+						break;
+					}
+
+				// Didn't match our parameter list, try the next possible.
+				if (!$match)
+					continue;]]></search>
+		<add><![CDATA[// START: Dougiefresh's faster parse_bbc function
+				if (!fix_param_order(($test = substr($message, $pos1 - 1)), $possible['parameters'], $replace_str))
+					continue;
+				$preg = '';
+				foreach ($possible['parameters'] as $p => $info)
+					$preg .= '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
+				if (!preg_match('~^' . $preg . '\]~i', ($test = $replace_str . substr($test, strpos($test, ']'))), $matches))
+					continue;
+				$message = substr($message, 0, $pos1 - 1) . $test;
+				// END: Dougiefresh's faster parse_bbc function]]></add>
+	</operation>
+</file>
+</modification>
